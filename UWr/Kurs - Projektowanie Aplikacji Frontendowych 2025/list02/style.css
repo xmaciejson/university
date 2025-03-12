@@ -14,25 +14,22 @@ body{
 
 /* Stylowanie nagłówków h1 */
 h1 {
-    font-weight: bold; /* Grubość czcionki */
+    font-weight: 800px; /* Grubość czcionki */
     font-size: 3rem; /* Ustawienie większego rozmiaru czcionki */
     text-align: center; /* Wyśrodkowanie nagłówka */
     margin-top: 20px;
 }
 
 /* Stylowanie paragrafów */
-p {
-    margin: 1rem auto; /* Marginesy góra/dół: 1rem, lewo/prawo: auto */
-    max-width: 80%; /* Ograniczenie szerokości, aby marginesy były większe */
+
+body p {
+    margin: 2rem 1rem; /* Marginesy góra/dół: 1rem, lewo/prawo: auto */
 }
 
 /*---------------------------------------------------------*/
 
 /* Styl dla wszystkich pudełek */
 .box {
-    width: 100px;
-    height: 100px;
-    padding: 10px; /* Dodanie paddingu zamiast zmiany wymiarów */
     box-sizing: border-box; /* Uwzględnia padding w rozmiarze pudełka */
     transition: all 0.3s ease; /* Płynne przejście między stanami */
 }
@@ -62,51 +59,48 @@ p {
 }
 
 /* 3. Trzecie pudełko – w połowie białe, w połowie czerwone */
-.box:last-child {
-    background: linear-gradient(to bottom, white 50%, red 50%);
+
+
+.box:last-child{
+    box-sizing: border-box;
+    background-color: red;
+    border-top: 50px solid white; 
 }
 
 /* Efekt hover dla trzeciego pudełka */
 .box:last-child:hover {
-    background: linear-gradient(to bottom, red 50%, white 50%); /* Zmiana kolejności gradientu */
+    background-color: white;
+    border-top-color: red; 
 }
 
 /*---------------------------------------------------------*/
 
 /* Stylizacja linków */
-#challenge3 a.food-link {
-    color: darkblue; /* Kolor linków */
-    text-decoration: underline; /* Linki zawsze podkreślone */
+#challenge3 .food-item {
+    color: inherit; /* Kolor linków */
+    list-style: none;
+}
+
+#challenge3 .food-link{
+    color: inherit;
+    text-decoration: underline;
 }
 
 /* Stylizacja odwiedzonych linków */
-#challenge3 a.food-link:visited {
+#challenge3 .food-link:visited {
     color: lightslategray; /* Kolor odwiedzonych linków */
 }
 
 /* Stylizacja linków po najechaniu */
-#challenge3 a.food-link:hover {
+#challenge3 .food-link:hover {
     color: red; /* Kolor linków na hover */
     font-weight: bold; /* Pogrubienie linków na hover */
 }
 
 /* Stylizacja listy z ikoną "🍔" zamiast kropek */
-#challenge3 ul {
-    list-style-type: none; /* Usunięcie kropek */
-    padding-left: 0;
-}
 
-#challenge3 ul li.food-item {
-    list-style-type: none; /* Usunięcie kropek w li */
-    padding-left: 20px; /* Dodanie marginesu dla ikony */
-    position: relative; /* Umożliwia ustawienie ikony przed tekstem */
-}
-
-#challenge3 ul li.food-item::before {
+#challenge3 .food-item::before {
     content: "🍔"; /* Ikona przed elementem listy */
-    position: absolute;
-    margin-left: -20px; /* Ustawienie ikony przed tekstem */
-    top: 0;
 }
 
 /*---------------------------------------------------------*/
@@ -127,19 +121,15 @@ p {
 }
 
 #challenge4 p:not(:empty) {
-    margin-bottom: 20px; /* Ustawia większą przerwę poniżej niepustych paragrafów */
+    margin-bottom: 0px; /* Ustawia większą przerwę poniżej niepustych paragrafów */
 }
 /*---------------------------------------------------------*/
 
 /* Styl dla sekcji "Images" */
-#challenge5 img {
+#ariel img {
     width: 70%; /* Szerokość obrazka na 70% dostępnej przestrzeni */
     min-width: 100px; /* Minimalna szerokość obrazka */
     max-width: 500px; /* Maksymalna szerokość obrazka */
-    height: auto; /* Zachowanie proporcji obrazka */
-    display: block; /* Usunięcie marginesów wokół obrazka */
-    margin-left: 0; /* Obrazek wyrównany do lewej */
-    margin-right: auto; /* Usunięcie marginesu z prawej strony */
 }
 
 /* Styl dla podpisu pod obrazkiem */
