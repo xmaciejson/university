@@ -42,18 +42,23 @@ class FibStream : IntStream
 
     public override int Next()
     {
-        if (ended) throw new InvalidOperationException("End of stream");
-        if (current > int.MaxValue - prev)
-        {
-            ended = true;
-            throw new InvalidOperationException("Fibonacci number exceeds int limit");
-        }
+        if (Eos()) throw new InvalidOperationException("End of stream");
+        
+
         int temp = current;
         current += prev;
         prev = temp;
         return prev;
     }
 
+    public new bool Eos()
+    {
+        if (current > int.MaxValue - prev)
+        {
+            ended = true;
+        }
+        return ended;
+    }
     public new void Reset()
     {
         prev = 0;
