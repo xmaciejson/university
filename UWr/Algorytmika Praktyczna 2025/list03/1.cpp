@@ -40,15 +40,15 @@ int main() {
                     sum += nums[i];
                 }
             } else {
-                for (int i = a; i < (leftBlock + 1) * blockSize; i++) {
+                for (int i = a; i < (leftBlock + 1) * blockSize; i++) {//poczatkowy niedokonczony blok
                     sum += nums[i];
                 }
 
-                for (int i = leftBlock + 1; i < rightBlock; i++) {
+                for (int i = leftBlock + 1; i < rightBlock; i++) {//sumy pelnych blokow
                     sum += blockSum[i];
                 }
 
-                for (int i = rightBlock * blockSize; i <= b; i++) {
+                for (int i = rightBlock * blockSize; i <= b; i++) {//koncowy niedokonczony blok
                     sum += nums[i];
                 }
             }

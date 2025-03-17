@@ -30,6 +30,16 @@ int main() {
         }
     }
 
+     // Wypisujemy tablicę precomputed
+     cout << "Tablica precomputed:\n";
+     for (int b = 1; b <= sqrtN; b++) {
+         cout << "b = " << b << ":\n";
+         for (int a = 0; a < N; a++) {
+             cout << "precomputed[" << a << "][" << b << "] = " << precomputed[a][b] << "\n";
+         }
+         cout << endl;
+     }
+    
     cin >> Q;
     while (Q--) {
         int a, b;
