@@ -192,67 +192,26 @@ class Program
     static void Main()
     {
         // Słownik wartości zmiennych
-        var vars = new Dictionary<string, int> { { "x", 3 }, { "y", 2 }, { "z", 5 } };
+        var vars = new Dictionary<string, int> { { "x", 3 }, { "y", 2 } };
 
-        /* TESTY NOWYCH FUNKCJONALNOŚCI */
-
-        Console.WriteLine("=== TESTY ToString() ===");
-        Expression test1 = Const.Create(5);
-        Expression test2 = Variable.Create("x") + Const.Create(2);
-        Expression test3 = Variable.Create("y") * (Const.Create(3) + Variable.Create("z"));
-        Console.WriteLine($"5 = {test1}");
-        Console.WriteLine($"x + 2 = {test2}");
-        Console.WriteLine($"y * (3 + z) = {test3}");
-
-        Console.WriteLine("\n=== TESTY Equals() ===");
-        Expression test4 = Variable.Create("x") + Const.Create(2);
-        Expression test5 = Variable.Create("x") + Const.Create(2);
-        Expression test6 = Variable.Create("y") + Const.Create(2);
-        Console.WriteLine($"x+2 == x+2: {test4.Equals(test5)}"); // True
-        Console.WriteLine($"x+2 == y+2: {test4.Equals(test6)}"); // False
-        Console.WriteLine($"x+2 == x*y: {test4.Equals(Variable.Create("x") * Variable.Create("y"))}"); // False
-
-        Console.WriteLine("\n=== TESTY OPERATORÓW ===");
-        Expression test7 = Const.Create(4) + Variable.Create("x") * Const.Create(2);
-        Console.WriteLine($"4 + x*2 = {test7}"); // (4 + (x * 2))
-        Console.WriteLine($"Wynik dla x=3: {test7.Evaluate(vars)}"); // 10
-
-        Console.WriteLine("\n=== TESTY ITERACJI ===");
-        Expression test8 = (Const.Create(1) + Variable.Create("x")) * (Variable.Create("y") - Const.Create(2));
-        Console.WriteLine($"Pełne wyrażenie: {test8}");
-        Console.WriteLine("Części:");
-        foreach (var part in test8)
+        Expression expr = Const.Create(4) + (Variable.Create("x") * Const.Create(2));
+        
+        Console.WriteLine($"Wyrażenie: {expr}");  // (4 + (x * 2))
+        Console.WriteLine($"Wynik: {expr.Evaluate(vars)}"); // 10
+        
+        Expression expr2 = Variable.Create("x") + Const.Create(2);
+        Expression expr3 = Variable.Create("x") + Const.Create(2);
+        Console.WriteLine($"Czy takie same? {expr2.Equals(expr3)}"); // True
+        
+        Console.WriteLine("\nWszystkie części wyrażenia:");
+        foreach (var e in expr)
         {
-            Console.WriteLine($"- {part.GetType().Name}: {part}");
+            Console.WriteLine($"- {e.GetType().Name}: {e}");
         }
-
-        Console.WriteLine("\n=== TESTY CACHE'OWANIA ===");
-        Const test9 = Const.Create(5);
-        Const test10 = Const.Create(5);
-        Variable test11 = Variable.Create("x");
-        Variable test12 = Variable.Create("x");
-        Console.WriteLine($"Czy ta sama stała 5: {object.ReferenceEquals(test9, test10)}"); // True
-        Console.WriteLine($"Czy ta sama zmienna x: {object.ReferenceEquals(test11, test12)}"); // True
-        Console.WriteLine($"Czy różne stałe: {object.ReferenceEquals(Const.Create(5), Const.Create(6))}"); // False
-
-        Console.WriteLine("\n=== TESTY POCHODNYCH ===");
-        Expression test13 = Variable.Create("x") * Variable.Create("x"); // x^2
-        Expression derivative = test13.Derivate("x"); // 2x
-        Console.WriteLine($"Pochodna z {test13} = {derivative}"); // (x + x)
-        Console.WriteLine($"Wartość pochodnej dla x=3: {derivative.Evaluate(vars)}"); // 6
-
-        Console.WriteLine("\n=== TESTY ZMIENNYCH ALIASOWANYCH ===");
-        Expression test14 = Variable.Create("x") + Variable.Create("y");
-        Expression test15 = Variable.Create("x") + Variable.Create("y");
-        Expression test16 = Variable.Create("a") + Variable.Create("b");
-        Console.WriteLine($"x+y == x+y: {test14.Equals(test15)}"); // True
-        Console.WriteLine($"x+y == a+b: {test14.Equals(test16)}"); // False
-
-        Console.WriteLine("\n=== TESTY SKŁADNI ALTERNATYWNEJ ===");
-        // Tradycyjny sposób
-        Expression oldStyle = new Add(new Const(4), new Multiply(new Variable("x"), new Const(2)));
-        // Nowy sposób z operatorami
-        Expression newStyle = Const.Create(4) + Variable.Create("x") * Const.Create(2);
-        Console.WriteLine($"Czy obie składnie dają ten sam wynik? {oldStyle.Evaluate(vars) == newStyle.Evaluate(vars)}"); // True
+        
+        //Sprawdzamy czy działa cache stałych
+        var c1 = Const.Create(5);
+        var c2 = Const.Create(5);
+        Console.WriteLine($"\nCzy to ta sama stała 5? {object.ReferenceEquals(c1, c2)}"); // True
     }
 }
