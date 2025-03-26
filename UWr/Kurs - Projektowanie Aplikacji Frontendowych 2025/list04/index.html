@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact Form</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="form-container">
+        <form class="form" lang="en">
+            <h2 class="form__title">Have a question?</h2>
+
+            <label class="form__label" for="name">First Name*</label>
+            <input class="form__input" type="text" id="name" name="name" required placeholder=" ">
+
+            <label class="form__label" for="last_name">Second Name</label>
+            <input class="form__input" type="text" id="last_name" name="last_name">
+
+            <label class="form__label" for="email">Email*</label>
+            <input class="form__input form__input--email" type="email" id="email" name="email" required placeholder=" "
+                   pattern="[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}">
+
+            <label class="form__label" for="number">Phone Number</label>
+            <input class="form__input form__input--phone" type="tel" id="number" name="number" 
+                   pattern="[0-9]{9}" title="9 digits required">
+
+            <label class="form__label" for="reason">Reason for Contact*</label>
+            <select class="form__select" name="reason" id="reason" required>
+                <option value="" disabled selected>Choose Your Reason</option>
+                <option value="question">Question</option>
+                <option value="issue">Technical Issue</option>
+                <option value="partnership">Partnership</option>
+                <option value="other">Other</option>
+            </select>
+
+            <label class="form__label" for="message">Message*</label>
+            <textarea class="form__textarea" name="message" id="message" required placeholder=" "></textarea>
+
+            <div class="form__checkbox-group">
+                <input class="form__checkbox" type="checkbox" id="newsletter" name="newsletter">
+                <label class="form__checkbox-label" for="newsletter">Subscribe to newsletter</label>
+            </div>
+
+            <button class="form__button" type="submit">Send</button>
+        </form>
+    </div>
+</body>
+</html>
