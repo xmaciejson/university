@@ -65,6 +65,22 @@ html {
     border-radius: 5px;
 }
 
+
+
+/* 2. Czerwone ramki po próbie wysłania */
+.form__textarea:user-invalid,
+.form__input:user-invalid,
+.form__select:user-invalid {
+  border: 2px solid red;
+}
+
+/* 3. Dla przeglądarek nieobsługujących :user-invalid */
+.form__input:invalid:not(:placeholder-shown),
+.form__select:invalid,
+.form__textarea:invalid:not(:placeholder-shown) {
+  border: 2px solid red;
+}
+
 .form__checkbox-group {
     display: grid;
     grid-template-columns: auto 1fr;
