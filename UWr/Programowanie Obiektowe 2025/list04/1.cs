@@ -2,7 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 
-// Główna klasa wyrażenia - tu dodajemy nowe funkcje
+// Główna klasa wyrażenia
 abstract class Expression : IEnumerable<Expression>
 {
     // Te dwie metody już były - zostawiamy je bez zmian
@@ -34,7 +34,7 @@ class Const : Expression
 {
     private int value;
     
-    // 5. Magiczna mapa która trzyma wszystkie stworzone stałe
+    // 5.mapa która trzyma wszystkie stworzone stałe
     private static readonly Dictionary<int, Const> cache = new Dictionary<int, Const>();
     
     // Zamiast konstruktora używamy tej metody - ona sprawdza czy już mamy taką stałą
@@ -73,7 +73,7 @@ class Variable : Expression
 {
     private string name;
     
-    // 5. Taka sama magia jak ze stałymi - jedna instancja na nazwę
+
     private static readonly Dictionary<string, Variable> cache = new Dictionary<string, Variable>();
     
     public static Variable Create(string name)
