@@ -83,7 +83,14 @@ class Pisarz implements Serializable {
     public String toString() {
         return pseudonim + " (ur. " + rokUrodzenia + ")";
     }
+
+    // 🔧 dodajemy to, żeby zainicjalizować `ksiazki` po deserializacji
+    private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
+        in.defaultReadObject();
+        ksiazki = new ArrayList<>();
+    }
 }
+
 
 class Krytyk extends AbstractObserver {
     private static final long serialVersionUID = 1L;
