@@ -32,6 +32,9 @@ let rec subst (x : ident) (s : expr) (e : expr) : expr =
   | Fst e -> Fst (subst x s e)
   | Snd e -> Snd (subst x s e)
   | Match (e1, z, y, e2) -> Match (subst x s e1, z, y, (if x = z || x = y then e2 else subst x s e2))
+  | Fold(e1, y, acc, e2, e3) -> 
+    let e2' = if x = y || x = acc then e2 else subst x s e2 in 
+    Fold(subst x s e1, y, acc, e2', subst x s e3)
   | _ -> e
 
 let rec reify (v : value) : expr =
@@ -109,12 +112,12 @@ let rec reify (v : value) : expr =
         match lst with
         | VUnit -> eval e3
         | VPair (vx, vxs) ->
-            let acc_val = foldtmp vxs in
-            let e2_subst = e2 |> subst x (reify vx) |> subst acc (reify acc_val) in
-            eval e2_subst
+          let acc_val = foldtmp vxs in
+          let e2_subst = e2 |> subst x (reify vx) |> subst acc (reify acc_val) 
+        in
+        eval e2_subst
         | _ -> failwith "type error"
-      in
-      foldtmp (eval e1)
+      in foldtmp (eval e1)
 
 let interp (s : string) : value =
   eval (parse s)

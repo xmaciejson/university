@@ -35,9 +35,6 @@ rule read =
     | "snd" { SND }
     | "match" { MATCH }
     | "with" { WITH }
-    | number { INT ( int_of_string (Lexing.lexeme lexbuf)) }
-    | ident { IDENT (Lexing.lexeme lexbuf) }
-    | eof { EOF }
     | "number?"  { Parser.ISNUMBER }(*ZAD 2*)
     | "boolean?" { Parser.ISBOOLEAN }
     | "pair?"    { Parser.ISPAIR }
@@ -47,3 +44,6 @@ rule read =
     | ";" { SEMICOLON }
     | "fold" { FOLD }
     | "and" { AND }
+    | number { INT ( int_of_string (Lexing.lexeme lexbuf)) }
+    | ident { IDENT (Lexing.lexeme lexbuf) }
+    | eof { EOF }

@@ -84,6 +84,8 @@ expr:
     | LBRACK; elements = ellist; RBRACK { elements }
     | FOLD; e1 = expr; WITH; LPAREN; x = IDENT; COMMA; acc = IDENT; RPAREN; ARR;
     e2 = expr; AND; e3 = expr { Fold(e1, x, acc, e2, e3) }
+    | expr AND expr {If($1, $3, Bool false)}
+    | expr OR expr {If($1, Bool true, $3)}
     ;
 
 ellist:

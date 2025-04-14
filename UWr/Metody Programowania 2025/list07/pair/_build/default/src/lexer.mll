@@ -35,15 +35,15 @@ rule read =
     | "snd" { SND }
     | "match" { MATCH }
     | "with" { WITH }
-    | number { INT ( int_of_string (Lexing.lexeme lexbuf)) }
-    | ident { IDENT (Lexing.lexeme lexbuf) }
-    | eof { EOF }
-    | "number?"  { ISNUMBER }(*ZAD 2*)
-    | "boolean?" { ISBOOLEAN }
-    | "pair?"    { ISPAIR }
-    | "unit?"    { ISUNIT }
+    | "number?"  { Parser.ISNUMBER }(*ZAD 2*)
+    | "boolean?" { Parser.ISBOOLEAN }
+    | "pair?"    { Parser.ISPAIR }
+    | "unit?"    { Parser.ISUNIT }
     | "[" { LBRACK }(*ZAD 3*)
     | "]" { RBRACK }
     | ";" { SEMICOLON }
     | "fold" { FOLD }
     | "and" { AND }
+    | number { INT ( int_of_string (Lexing.lexeme lexbuf)) }
+    | ident { IDENT (Lexing.lexeme lexbuf) }
+    | eof { EOF }
