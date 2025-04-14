@@ -41,7 +41,7 @@ int query(int node, int left, int right, int k){
         return query(node * 2, left, mid, k);
     }
     else {
-       return query(node * 2 + 1, mid + 1, right, k);
+       return query(node * 2 + 1, mid + 1, right, k - tree[node * 2]);
     }
 }
 
