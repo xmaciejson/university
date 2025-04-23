@@ -71,7 +71,7 @@ function compareObjects(obj1, obj2){
     if (keys1.length !== keys2.length) return false;
 
     for (let key of keys1){
-        if (!keys2.includes(key)) return false;
+        if (!obj2.hasOwnProperty(key)) return false;
         if (!compareObjects(obj1[key], obj2[key])) return false;
     }
 
@@ -131,9 +131,9 @@ console.log("Should be False:", compareObjects(obj5, obj1));
 let library = [];
 
 const addBookToLibrary = (title, author, pages, isAvailable, ratings) => {
-    if (title.length === 0) throw new Error("Title cannot be an empty string!");
-    if (author.length === 0) throw new Error("Author cannot be an empty string!");
-    if (pages <= 0) throw new Error("Pages should be a number greater than 0!");
+    if (title.trim() === '' || typeof title !== 'string') throw new Error("Title cannot be an empty string!");
+    if (author.trim() === '' || typeof title !== 'string') throw new Error("Author cannot be an empty string!");
+    if (pages <= 0 || typeof pages !== 'number') throw new Error("Pages should be a number greater than 0!");
     if (typeof isAvailable !== 'boolean') throw new Error("isAvaiable should be a boolean type!");
     if (!Array.isArray(ratings)) throw new Error("Ratings must be an array!");
     if (!ratings.every(r => typeof r === 'number' && r >= 0 && r <= 5)) throw new Error("Each rating must be a number between 0 and 5!")
@@ -154,25 +154,33 @@ function testAddingBooks(tests){
         const {testCase, shouldFail} = tests[i];
         try{
             addBookToLibrary(...testCase);
+            console.log(shouldFail? 'test failed' : 'test passed', testCase);
+            /*
             if (shouldFail){
-                console.log("Test " + (i + 1) + " passed");
+                console.log("Test " + (i + 1) + " failed");
                 console.log('Test case: ', testCase);
             }
             else{
                 console.log("Test " + (i + 1) + " passed");
                 console.log('Test case: ', testCase);
             }
+              */
         } catch (error) {
+          console.log(shouldFail? 'test passed' : 'test failed', testCase, error.message);
+
+          /*
             if (shouldFail){
                 console.log("Test " + (i + 1) + " passed");
                 console.log('Test case: ', testCase);
                 console.log('Error message: ', error.message);
             } else {
-                console.log("Test " + (i + 1) + " passed");
+                console.log("Test " + (i + 1) + " failed");
                 console.log("Test case:", testCase);
-                console.log("Error message:", e.message);
+                console.log("Error message:", error.message);
             }
+                */
         }
+          
     console.log('--------------------');
     }
 }
@@ -205,8 +213,15 @@ console.log(testAddingBooks(testCases));
 
 /*ZAD 7*/
 function addBooksToLibrary(books){
+
     books.forEach(book => {
-        addBookToLibrary(...book);
+      try{addBookToLibrary(...book);
+
+      }
+      catch (error){
+        console.log(error.message);
+      }
+        
     });
 }
 
