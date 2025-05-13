@@ -1,0 +1,58 @@
+ZAD5
+W tym przypadku, PushVar reprezentuje operację, która dodaje zmienną (a więc odwołanie do niej, jej nazwę) na stos. 
+Przechodzimy po każdej komendzie (cmd) w programie.
+Utrzymujemy:
+current_height – aktualna liczba elementów na stosie.
+max_height – największa wartość current_height, jaka wystąpiła.
+Dla każdej komendy:
+obliczamy, jak wpływa na wysokość stosu (czy dodaje/usuwa elementy),
+aktualizujemy current_height,
+aktualizujemy max_height.
+
+| Komenda                                                | Zmiana wysokości  | Opis                                                                  |
+| ------------------------------------------------------ | ----------------- | --------------------------------------------------------------------- |
+| `PushInt`, `PushBool`, `PushUnit`, `PushVar`, `Load n` | `+1`              | dodają wartość na stos                                                |
+| `Binop _`, `PushPair`                                  | `-1`              | biorą 2 wartości, dają 1 (czyli -1 netto)                             |
+| `Fst`, `Snd`, `IsPair`                                 | `0`               | biorą 1 wartość, dają 1 — bez zmiany                                  |
+| `Store`                                                | `-2`              | zabiera 2 wartości                                                    |
+| `CleanUp`                                              | `-1`              | usuwa 1 wartość                                                       |
+| `CndJmp (p1, p2)`                                      | `-1`, `max s1 s2` | usuwa warunek, wybiera jedną z gałęzi, ale liczymy największą z dwóch |
+
+prog to lista komend (cmd list), czyli wszystkie możliwe instrukcje jakie może zawierać program.
+
+ZAD2
+Funkcja eval_prefix przyjmuje listę stringów reprezentujących wyrażenie arytmetyczne zapisane w notacji prefiksowej (czyli operator występuje przed operandami) i oblicza jego wartość. 
+frame — to typ, który reprezentuje „ramki oczekujące na argumenty” dla operatorów. Wyróżniamy:
+
+Waiting1 of string — operator czeka na pierwszy argument
+Waiting2 of string * int — operator ma już pierwszy argument, czeka na drugi
+item — to typ reprezentujący element na stosie obliczeniowym:
+Value of int — oznacza gotową liczbę
+Frame of frame — oznacza oczekujący operator
+PrefixError — wyjątek rzucany w przypadku błędnych danych wejściowych, np. niepoprawnego tokena lub niekompletnego wyrażenia.
+
+Przebieg działania funkcji eval_prefix:
+Tworzony jest pusty stos, do którego będą trafiać operatory i liczby.
+Dla każdego tokena z wejściowej listy:
+Jeśli to operator ("+", "-", "*", "/"), to zostaje umieszczony na stosie jako Frame (Waiting1 token).
+Jeśli to liczba, zostaje zamieniona na int i przekazywana do funkcji handle_number.
+
+Co robi handle_number?
+To funkcja, która próbuje wstawić liczbę na stos, ale bierze pod uwagę, że na stosie może już czekać operator. Są 3 przypadki:
+Jeśli stos jest pusty, po prostu dodaje liczbę jako Value n.
+Jeśli na stosie jest Frame (Waiting1 op), to oznacza, że operator czeka na pierwszy argument. Wtedy zdejmujemy ten Frame i zamiast niego kładziemy Frame (Waiting2 (op, n)).
+Jeśli na stosie jest Frame (Waiting2 (op, x)), to operator ma już pierwszy argument x, a właśnie otrzymał drugi n. Wtedy obliczamy wynik eval_binop op x n, i wywołujemy handle_number res, aby dokończyć przetwarzanie (bo być może czeka jeszcze inny operator wyżej).
+Jeśli na stosie znajdzie się Value _, gdy spodziewano się operatora, rzucany jest wyjątek.
+
+Po przejściu przez wszystkie tokeny, sprawdzany jest stos:
+Jeśli został jeden element typu Value n i stos jest pusty — zwracamy n.
+W przeciwnym razie rzucamy PrefixError, bo wyrażenie jest niekompletne lub błędne.
+
+ZAD1
+Funkcja działa rekurencyjnie, czyli zagląda w głąb wyrażenia, analizując po kolei jego części. Dla każdej napotkanej konstrukcji językowej (np. liczby, operator, funkcja) zwraca odpowiadający jej fragment tekstu w notacji prefiksowej.
+Liczby są zamieniane na ich tekstowy odpowiednik, np. 3 → „3”.
+Zmienne są po prostu reprezentowane przez swoją nazwę.
+Operator binarny (np. dodawanie) zamieniany jest na tekst postaci: + a b, gdzie a i b to kolejne przekształcone argumenty.
+Warunek if zapisywany jest jako: if warunek gałąź_true gałąź_false.
+Aplikacja funkcji to: apply funkcja argument.
+Funkcja rozpoznaje także inne konstrukcje takie jak: let, funkcje anonimowe, funkcje rekurencyjne, pary, rozbijanie pary, sprawdzanie, czy coś jest parą, oraz dopasowanie do pary (match).
