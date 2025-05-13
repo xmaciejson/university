@@ -1,7 +1,3 @@
-############################################
-# gra_war_ruby: Prosta gra "Wojna" z zapisem stanu do pliku
-############################################
-
 # Mixin do zapisu i odczytu obiektów
 module Persistable
   def zapisz_do_pliku(nazwa)
