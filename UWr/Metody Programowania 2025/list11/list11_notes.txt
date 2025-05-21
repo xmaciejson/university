@@ -1,0 +1,155 @@
+ZAD 1------
+Wyjątek:
+Type_error – wyjątek zgłaszany podczas błędów typowania, zawiera pozycję w kodzie oraz komunikat o błędzie.
+
+Funkcja string_of_typ:
+Konwertuje typy zdefiniowane w języku na czytelny tekst.
+
+Typy obsługiwane:
+TUnit → "unit"
+TInt → "int"
+TBool → "bool"
+TPair(t1, t2) → "(typ1 * typ2)"
+TArrow(t1, t2) → "(typ1 -> typ2)"
+
+Moduł Env:
+Reprezentuje środowisko typów (mapę ze zmiennymi na typy).
+StrMap – mapa kluczy string na wartości typu typ.
+initial – pusta mapa.
+add_var – dodaje zmienną z typem do środowiska.
+lookup_var – szuka typu zmiennej w środowisku, zwraca Some typ lub None.
+
+Funkcja infer_type:
+Główna funkcja inferująca typ wyrażenia expr w danym środowisku env.
+Przechodzi przez strukturę wyrażenia i określa jego typ zgodnie z regułami typowania.
+
+Przykładowe przypadki:
+Literały Unit, Int, Bool – zwraca odpowiedni typ.
+Var x – sprawdza typ zmiennej w środowisku, rzuca błąd jeśli nie znaleziono.
+
+Operacje binarne:
+Arytmetyczne (Add, Sub, Mult, Div) wymagają typów int.
+Logiczne (And, Or) wymagają bool.
+Porównania (Leq, Lt, Geq, Gt) zwracają bool.
+Równość (Eq, Neq) sprawdzają zgodność typów argumentów.
+Instrukcja warunkowa If – warunek musi być bool, oba bloki muszą mieć ten sam typ.
+Let – inferuje typ dla wyrażenia przypisywanego zmiennej, rozszerza środowisko i inferuje typ reszty.
+Pair – tworzy parę typów.
+App – sprawdza, czy funkcja ma typ tp_arg -> tp_ret, a argument ma typ tp_arg, zwraca tp_ret.
+Fst i Snd – operacje na parach, zwracają odpowiednio pierwszy i drugi typ.
+Fun – funkcja anonimowa, dodaje argument do środowiska i inferuje typ ciała, zwraca typ strzałkowy.
+Funrec – funkcja rekurencyjna, dodaje zarówno argument jak i funkcję do środowiska, sprawdza zgodność typu ciała.
+
+Funkcja check_type:
+Sprawdza, czy wyrażenie ma oczekiwany typ.
+Jeśli typ rzeczywisty różni się od oczekiwanego, rzuca wyjątek Type_error.
+
+Funkcja check_program:
+Sprawdza poprawność typów całego programu (wyrażenia).
+Wywołuje infer_type na początkowym pustym środowisku.
+
+ZAD 2-----------------
+1. Moduł środowiska (Env)
+Reprezentuje środowisko typów jako mapę od nazw zmiennych (string) do ich typów (typ).
+initial — puste środowisko.
+add_var — dodaje zmienną i jej typ do środowiska.
+lookup_var — szuka typu zmiennej w środowisku, zwraca Some tp jeśli znaleziono, None jeśli nie.
+
+2. Typy błędów
+error to krotka: (Lexing.position * Lexing.position) * string — zawiera pozycję (początkową i końcową) fragmentu kodu oraz komunikat błędu.
+errors to lista błędów — pozwala gromadzić wiele błędów podczas sprawdzania.
+
+3. Funkcja add_error
+Dodaje nowy błąd do listy błędów.
+Wejście: aktualna lista błędów, wyrażenie e (do którego przypisana jest pozycja w kodzie), komunikat błędu.
+Wyjście: nowa lista błędów z dopisanym nowym błędem.
+
+4. Funkcja infer_type
+Główna funkcja wnioskowania o typie wyrażenia.
+Argumenty:
+env — środowisko typów,
+e — wyrażenie do sprawdzenia,
+errors — lista dotychczasowych błędów.
+
+Zwraca:
+typ — wnioskowany typ wyrażenia,
+errors — zaktualizowaną listę błędów.
+
+Działanie:
+Dla każdej konstrukcji składniowej wyrażenia e:
+Sprawdza typy podwyrażeń rekurencyjnie.
+Jeśli wszystko jest poprawne, zwraca typ wyrażenia i nie zmienia listy błędów.
+Jeśli wykryje błąd typów (np. niezgodność typów, niezdefiniowana zmienna), dodaje błąd do listy, ale nie przerywa działania (kontynuuje sprawdzanie).
+
+Przykłady:
+Var x — szuka x w środowisku, jeśli nie ma, dodaje błąd o niezdefiniowanej zmiennej.
+Binop(Add, e1, e2) — sprawdza, czy e1 i e2 są TInt.
+App(e1, e2) — sprawdza, czy e1 ma typ funkcji, czy argument e2 ma typ zgodny z funkcją.
+If(b, e1, e2) — sprawdza, czy b jest TBool i czy e1 i e2 mają ten sam typ.
+
+5. Funkcja check_type
+Pomocnicza funkcja do sprawdzania, czy wyrażenie e ma dokładnie typ tp.
+Wywołuje infer_type dla e.
+Jeśli typy się nie zgadzają, dodaje błąd "Type mismatch".
+Zwraca zaktualizowaną listę błędów.
+
+6. Funkcja print_errors
+Wypisuje na standardowe wyjście listę błędów.
+Dla każdego błędu wypisuje numer linii, kolumnę i komunikat.
+
+7. Funkcja check_program
+Sprawdza cały program (wyrażenie e) zaczynając od pustego środowiska i pustej listy błędów.
+Jeśli nie ma błędów, zwraca wyrażenie.
+Jeśli są błędy, drukuje je i przerywa działanie programu z wyjątkiem.
+
+Podsumowanie:
+Implementacja pozwala na zgromadzenie wielu błędów typów w trakcie jednej analizy, zamiast zatrzymywać się na pierwszym.
+Pozwala to wypisać programiście listę wszystkich problemów do poprawienia na raz.
+Błędy są lokalizowane dokładnie dzięki przechowywaniu pozycji fragmentów kodu.
+Funkcje infer_type i check_type współpracują, rekurencyjnie sprawdzając typy i zbierając błędy.
+
+ZAD 3------
+Idea:
+Wielokrotne argumenty funkcji rekurencyjnej są przekształcane na zagnieżdżone funkcje jednoargumentowe (currying) już na etapie parsera, przed sprawdzaniem typów.
+
+Implementacja:
+W parserze znajduje się funkcja pomocnicza:
+let expand_funrec loc f args ret_ty body =
+  match args with
+  | [] -> failwith "funrec must have at least one argument"
+  | (x1, tp1) :: rest ->
+      let inner_fun = mk_fun loc rest body in
+      let final_ty = mk_arrow_type rest ret_ty in
+      node loc (Funrec(f, x1, tp1, final_ty, inner_fun))
+
+Parametry funkcji:
+f — nazwa funkcji rekurencyjnej,
+args — lista argumentów (nazwa, typ), np. [(n, int); (r, int)],
+ret_ty — typ zwracany,
+body — ciało funkcji.
+mk_fun — rekurencyjnie zamienia listę argumentów na zagnieżdżone funkcje jednoargumentowe:
+
+
+let rec mk_fun loc args body =
+  match args with
+  | [] -> body
+  | (x, tp) :: xs -> node loc (Fun(x, tp, mk_fun loc xs body))
+mk_arrow_type — tworzy złożony typ funkcyjny (typy argumentów do typu zwracanego):
+
+let rec mk_arrow_type args ret =
+  match args with
+  | [] -> ret
+  | (_, tp) :: xs -> TArrow(tp, mk_arrow_type xs ret)
+Działanie:
+Przykład powyższej funkcji fact jest zamieniany na:
+
+funrec fact (n : int) : (int -> int) ->
+  fun (r : int) ->
+    if n = 0 then r
+    else fact (n - 1) (r * n)
+czyli funrec z pierwszym argumentem i zagnieżdżoną funkcją przyjmującą kolejne argumenty.
+
+Podsumowanie:
+Wieloargumentowe funkcje rekurencyjne są przekształcane do postaci funkcyjnej (curried) w parserze,
+Przekształcenie wykonuje funkcja expand_funrec przy pomocy mk_fun i mk_arrow_type,
+Dzięki temu późniejsze etapy kompilacji widzą tylko jednoargumentowe funkcje rekurencyjne i prostsze typy.
