@@ -1,5 +1,6 @@
 from datetime import date, datetime
 import json
+import os
 
 class Book:
 
@@ -278,6 +279,12 @@ class Library:
             reservation.cancel_reservation()
             self.reservations.remove(reservation)
 
+    def get_book_by_id(self, book_id: int):
+        return next((book for book in self.books if book.book_id == book_id), None)
+
+    def get_user_by_id(self, user_id: int):
+        return next((user for user in self.users if user.user_id == user_id), None)
+
 
 class FileManager:
     @staticmethod
@@ -294,7 +301,35 @@ class FileManager:
         with open('loans.json', 'w') as file:
             json.dump([loan.to_dict() for loan in library.borrows_list], file)
 
+    @staticmethod
+    def load_library():
+        library = Library()
 
+        if os.path.exists('books.json'):
+            with open('books.json', 'r', encoding='utf-8') as file:
+                for data in json.load(file):
+                    book = Book.from_dict(data)
+                    library.add_book(book)
+
+        if os.path.exists('users.json'):
+            with open('books.json', 'r', encoding='utf-8') as file:
+                for data in json.load(file):
+                    user_type = data.get('type')
+                    if user_type == 'Reader':
+                        user = Reader.from_dict(data)
+                    elif user_type == 'Librarian':
+                        user = Librarian.from_dict(data)
+                    else:
+                        continue
+                    library.add_user(user)
+
+        if os.path.exists('reservations.json'):
+            with open('reservations.json', 'r', encoding='utf-8') as file:
+                for data in json.load(file):
+                    book = library.get_book_by_id(data['book_id'])
+                    user = library.get_user_by_id(data['user_id'])
+                    if book and user:
+                        reservation = Reservation
 
 
 
