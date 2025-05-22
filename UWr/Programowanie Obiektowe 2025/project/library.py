@@ -1,4 +1,4 @@
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 import json
 import os
 
@@ -304,7 +304,6 @@ class FileManager:
     @staticmethod
     def load_library():
         library = Library()
-
         if os.path.exists('books.json'):
             with open('books.json', 'r', encoding='utf-8') as file:
                 for data in json.load(file):
@@ -329,11 +328,113 @@ class FileManager:
                     book = library.get_book_by_id(data['book_id'])
                     user = library.get_user_by_id(data['user_id'])
                     if book and user:
-                        reservation = Reservation
+                        reservation = Reservation(book, user, data['return_date'])
+                        library.add_reservation(reservation)
+
+        if os.path.exists('loans.json'):
+            with open('loans.json', 'w', encoding='utf-8') as file:
+                for data in json.load(file):
+                    book = library.get_book_by_id(data['book_id'])
+                    user = library.get_user_by_id(data['user_id'])
+                    if book and isinstance(user, Reader):
+                        user.borrowed_books.append(book)
+                        library.borrows_list.append(Loan(book, user, data['return_date']))
+
+        return library
 
 
+def main():
+    library = Library()
 
+    while True:
+        print("\n===== MENU BIBLIOTEKI =====")
+        print("1. Dodaj książkę")
+        print("2. Pokaż wszystkie książki")
+        print("3. Dodaj użytkownika")
+        print("4. Wypożycz książkę")
+        print("5. Zwróć książkę")
+        print("6. Zarezerwuj książkę")
+        print("7. Zapisz dane do plików")
+        print("0. Wyjście")
 
+        choice = input("Wybierz opcję: ")
 
+        if choice == '1':
+            title = input("Tytuł: ")
+            author = input("Autor: ")
+            total_copies = int(input("Liczba egzemplarzy: "))
+            book_id = int(input("ID książki: "))
+            book = Book(title, author, total_copies, book_id)
+            library.add_book(book)
+            print("✅ Dodano książkę.")
 
+        elif choice == '2':
+            if not library.books:
+                print('Brak książek!')
+            for book in library.books:
+                print(book)
 
+        elif choice == '3':
+            name = input('Imię użytkownika: ')
+            user_id = int(input('ID użytkownika'))
+            user_type = input('Typ użytkownika (reader/librarian): ').lower()
+            if user_type == 'reader':
+                user = Reader(name, user_id)
+            else:
+                user = Librarian(name, user_id)
+            library.users.append(user)
+            print('Dodano użytkownika!')
+
+        elif choice == '4':
+            user_id = int(input('ID użytkownika'))
+            book_id = int(input("ID książki: "))
+            user = next((u for u in library.users if u.user_id == user_id), None)
+            book = next((b for b in library.books if b.book_id == book_id), None)
+            if user and book:
+                if user.borrow_book(book):
+                    print('Wypożyczono książkę!')
+                else:
+                    print('Brak dostępnych egzemplarzy')
+            else:
+                print('Nie znaleziono książki lub użytkownika!')
+
+        elif choice == '5':
+            user_id = int(input('ID użytkownika'))
+            book_id = int(input("ID książki: "))
+            user = next((u for u in library.users if u.user_id == user_id), None)
+            book = next((b for b in library.books if b.book_id == book_id), None)
+            if user and book:
+                if user.return_book(book):
+                    print('Zwrot przyjęty!')
+                else:
+                    print('Podany użytkownik nie ma tej książki!')
+            else:
+                print('Nie znaleziono książki lub użytkownika!')
+
+        elif choice == '6':
+            user_id = int(input('ID użytkownika'))
+            book_id = int(input("ID książki: "))
+            user = next((u for u in library.users if u.user_id == user_id), None)
+            book = next((b for b in library.books if b.book_id == book_id), None)
+            if user and book:
+                if user.reserve_book(book):
+                    r_dt = (datetime.today() + timedelta(days=7)).strftime('%d-%m-%Y')
+                    reservation = Reservation(book, user, return_date=r_dt)
+                    library.add_reservation(reservation)
+                    print('Zarezerwowano książkę!')
+                else:
+                    print('Nie można zarezerwować!')
+            else:
+                print('Nie znaleziono książki lub użytkownika!')
+
+        elif choice == '7':
+            FileManager.save_library(library)
+            print('Dane zapisane do plików!')
+
+        elif choice == '0':
+            print('Do zobaczenia!')
+
+        else:
+            print('Nieznana opcja!')
+
+main()
