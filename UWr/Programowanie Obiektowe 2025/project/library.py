@@ -48,7 +48,7 @@ class Book:
         self.available_copies += 1
 
     def __str__(self) -> str:
-        return f'{self.title} by {self.author} - {self.available_copies}/{self.total_copies} copies available.'
+        return f'{self.title} autorstwa {self.author} - {self.available_copies}/{self.total_copies} dostępnych kopii.'
 
 class User:
 
@@ -354,6 +354,7 @@ def main():
         print("4. Wypożycz książkę")
         print("5. Zwróć książkę")
         print("6. Zarezerwuj książkę")
+        print("7. Usuń rezerwację")
         print("7. Zapisz dane do plików")
         print("0. Wyjście")
 
@@ -366,7 +367,7 @@ def main():
             book_id = int(input("ID książki: "))
             book = Book(title, author, total_copies, book_id)
             library.add_book(book)
-            print("✅ Dodano książkę.")
+            print("Dodano książkę.")
 
         elif choice == '2':
             if not library.books:
@@ -376,7 +377,7 @@ def main():
 
         elif choice == '3':
             name = input('Imię użytkownika: ')
-            user_id = int(input('ID użytkownika'))
+            user_id = int(input('ID użytkownika: '))
             user_type = input('Typ użytkownika (reader/librarian): ').lower()
             if user_type == 'reader':
                 user = Reader(name, user_id)
@@ -386,7 +387,7 @@ def main():
             print('Dodano użytkownika!')
 
         elif choice == '4':
-            user_id = int(input('ID użytkownika'))
+            user_id = int(input('ID użytkownika: '))
             book_id = int(input("ID książki: "))
             user = next((u for u in library.users if u.user_id == user_id), None)
             book = next((b for b in library.books if b.book_id == book_id), None)
@@ -399,7 +400,7 @@ def main():
                 print('Nie znaleziono książki lub użytkownika!')
 
         elif choice == '5':
-            user_id = int(input('ID użytkownika'))
+            user_id = int(input('ID użytkownika: '))
             book_id = int(input("ID książki: "))
             user = next((u for u in library.users if u.user_id == user_id), None)
             book = next((b for b in library.books if b.book_id == book_id), None)
@@ -412,7 +413,7 @@ def main():
                 print('Nie znaleziono książki lub użytkownika!')
 
         elif choice == '6':
-            user_id = int(input('ID użytkownika'))
+            user_id = int(input('ID użytkownika: '))
             book_id = int(input("ID książki: "))
             user = next((u for u in library.users if u.user_id == user_id), None)
             book = next((b for b in library.books if b.book_id == book_id), None)
@@ -428,11 +429,14 @@ def main():
                 print('Nie znaleziono książki lub użytkownika!')
 
         elif choice == '7':
+
+        elif choice == 'S':
             FileManager.save_library(library)
             print('Dane zapisane do plików!')
 
         elif choice == '0':
             print('Do zobaczenia!')
+            break
 
         else:
             print('Nieznana opcja!')
