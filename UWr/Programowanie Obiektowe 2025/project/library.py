@@ -237,7 +237,7 @@ class Reservation:
 
             self.active = False
             return True
-        return False
+
 
 class Library:
     def __init__(self):
@@ -279,6 +279,7 @@ class Library:
             reservation.cancel_reservation()
             self.reservations.remove(reservation)
 
+
     def get_book_by_id(self, book_id: int):
         return next((book for book in self.books if book.book_id == book_id), None)
 
@@ -311,7 +312,7 @@ class FileManager:
                     library.add_book(book)
 
         if os.path.exists('users.json'):
-            with open('books.json', 'r', encoding='utf-8') as file:
+            with open('users.json', 'r', encoding='utf-8') as file:
                 for data in json.load(file):
                     user_type = data.get('type')
                     if user_type == 'Reader':
@@ -332,7 +333,7 @@ class FileManager:
                         library.add_reservation(reservation)
 
         if os.path.exists('loans.json'):
-            with open('loans.json', 'w', encoding='utf-8') as file:
+            with open('loans.json', 'r', encoding='utf-8') as file:
                 for data in json.load(file):
                     book = library.get_book_by_id(data['book_id'])
                     user = library.get_user_by_id(data['user_id'])
@@ -355,7 +356,7 @@ def main():
         print("5. Zwróć książkę")
         print("6. Zarezerwuj książkę")
         print("7. Usuń rezerwację")
-        print("7. Zapisz dane do plików")
+        print("8. Zapisz dane do plików")
         print("0. Wyjście")
 
         choice = input("Wybierz opcję: ")
@@ -429,8 +430,20 @@ def main():
                 print('Nie znaleziono książki lub użytkownika!')
 
         elif choice == '7':
+            user_id = int(input('ID użytkownika: '))
+            book_id = int(input("ID książki: "))
+            reservation_to_remove = None
+            for res in library.reservations:
+                if res.user.user_id == user_id and res.book.book_id == book_id and res.active:
+                    reservation_to_remove = res
+                    break
+            if reservation_to_remove:
+                library.remove_reservation(reservation_to_remove)
+                print('Rezerwacja usunięta!')
+            else:
+                print('Nie znaleziono rezerwacji!')
 
-        elif choice == 'S':
+        elif choice == '8':
             FileManager.save_library(library)
             print('Dane zapisane do plików!')
 
