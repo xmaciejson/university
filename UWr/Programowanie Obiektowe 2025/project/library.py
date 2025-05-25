@@ -52,11 +52,10 @@ class Book:
 
 class User:
 
-    def __init__(self, name: str, user_id: int, is_blocked: bool = False, borrowed_books: list = None):
+    def __init__(self, name: str, user_id: int, borrowed_books: list = None):
         self.name = name
         self.user_id = user_id
         self.borrowed_books = borrowed_books if borrowed_books is not None else []
-        self.is_blocked = is_blocked
 
     def to_dict(self):
         return {
@@ -64,7 +63,6 @@ class User:
             'name': self.name,
             'user_id': self.user_id,
             'borrowed_books': [book.book_id for book in self.borrowed_books],
-            'is_blocked': self.is_blocked
         }
 
     @staticmethod
@@ -72,9 +70,7 @@ class User:
         user = User(
             name=data['name'],
             user_id=data['user_id'],
-            borrowed_books=[],
-            is_blocked=data['is_blocked']
-        )
+            borrowed_books=[])
         return user
 
     def borrow_book(self, book) -> bool:
@@ -91,8 +87,8 @@ class User:
         return False
 
 class Reader(User):
-    def __init__(self, name: str, user_id: int, is_blocked: bool = False, borrowed_books: list = None, reservation_history: list = None):
-        super().__init__(name=name, user_id=user_id, is_blocked=is_blocked, borrowed_books=borrowed_books)
+    def __init__(self, name: str, user_id: int, borrowed_books: list = None, reservation_history: list = None):
+        super().__init__(name=name, user_id=user_id, borrowed_books=borrowed_books)
         self.reservation_history = reservation_history if reservation_history is not None else []
 
     def to_dict(self):
@@ -106,7 +102,6 @@ class Reader(User):
         reader = Reader(
             name=data['name'],
             user_id=data['user_id'],
-            is_blocked=data['is_blocked'],
             borrowed_books=[],
             reservation_history=[]
         )
@@ -123,8 +118,8 @@ class Reader(User):
         return self.reservation_history
 
 class Librarian(User):
-    def __init__(self, name: str, user_id: int, is_blocked: bool = False, borrowed_books: list = None):
-        super().__init__(name=name, user_id=user_id, is_blocked=is_blocked, borrowed_books=borrowed_books)
+    def __init__(self, name: str, user_id: int, borrowed_books: list = None):
+        super().__init__(name=name, user_id=user_id, borrowed_books=borrowed_books)
 
     def to_dict(self):
         data = super().to_dict()
@@ -136,7 +131,6 @@ class Librarian(User):
         librarian = Librarian(
             name=data['name'],
             user_id=data['user_id'],
-            is_blocked=data['is_blocked'],
             borrowed_books=[]
         )
         return librarian
@@ -149,9 +143,6 @@ class Librarian(User):
 
     def create_user(self, library, user) -> None:
         library.add_user(user)
-
-    def block_user(self, user) -> None:
-        user.is_blocked = True
 
 class Loan:
     def __init__(self, user_id: int, book: str, reservation_date: str, return_date: str, actual_return_date: str):
@@ -350,14 +341,19 @@ def main():
     while True:
         print("\n===== MENU BIBLIOTEKI =====")
         print("1. Dodaj książkę")
-        print("2. Pokaż wszystkie książki")
-        print("3. Dodaj użytkownika")
-        print("4. Wypożycz książkę")
-        print("5. Zwróć książkę")
-        print("6. Zarezerwuj książkę")
-        print("7. Usuń rezerwację")
-        print("8. Zapisz dane do plików")
-        print("0. Wyjście")
+        print("2. Usuń książkę")
+        print("3. Pokaż wszystkie książki")
+        print("4. Dodaj użytkownika")
+        print("5. Usuń użytkownika")
+        print("6. Pokaż wszystkich użytkowników")
+        print("7. Wypożycz książkę")
+        print("8. Zwróć książkę")
+        print("9. Zarezerwuj książkę")
+        print("10. Usuń rezerwację")
+        print("11. Sprawdź czy rezerwacja jest po terminie")
+        print("12. Sprawdź opłatę za przetrzymanie")
+        print("S. Zapisz dane do plików")
+        print("X. Wyjście")
 
         choice = input("Wybierz opcję: ")
 
@@ -371,12 +367,25 @@ def main():
             print("Dodano książkę.")
 
         elif choice == '2':
+            book_id = int(input("ID książki: "))
+            book_to_remove = None
+            for b in library.books:
+                if b.book_id == book_id:
+                    book_to_remove = b
+                    break
+            if book_to_remove:
+                library.remove_book(book_to_remove)
+                print("Usunięto książkę!")
+            else:
+                print("Nie znaleziono książki!")
+
+        elif choice == '3':
             if not library.books:
                 print('Brak książek!')
             for book in library.books:
                 print(book)
 
-        elif choice == '3':
+        elif choice == '4':
             name = input('Imię użytkownika: ')
             user_id = int(input('ID użytkownika: '))
             user_type = input('Typ użytkownika (reader/librarian): ').lower()
@@ -386,6 +395,28 @@ def main():
                 user = Librarian(name, user_id)
             library.users.append(user)
             print('Dodano użytkownika!')
+
+        elif choice == '5':
+            user_id = int(input("Podaj ID użytkownika: "))
+            user_to_remove = None
+            for u in library.users:
+                if u.user_id == user_id:
+                    user_to_remove = u
+                    break
+            if user_to_remove:
+                library.remove_user(user_to_remove)
+                print("Usunięto użytkownika!")
+            else:
+                print("Nie znaleziono użytkownika")
+
+        elif choice == '6':
+            if not library.users:
+                print("Brak użytkowników!")
+            else:
+                for user in library.users:
+                    print(user)
+
+
 
         elif choice == '4':
             user_id = int(input('ID użytkownika: '))
