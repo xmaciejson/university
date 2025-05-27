@@ -270,7 +270,6 @@ class Library:
             reservation.cancel_reservation()
             self.reservations.remove(reservation)
 
-
     def get_book_by_id(self, book_id: int):
         return next((book for book in self.books if book.book_id == book_id), None)
 
@@ -416,22 +415,31 @@ def main():
                 for user in library.users:
                     print(user)
 
-
-
-        elif choice == '4':
+        elif choice == '7':
             user_id = int(input('ID użytkownika: '))
             book_id = int(input("ID książki: "))
             user = next((u for u in library.users if u.user_id == user_id), None)
             book = next((b for b in library.books if b.book_id == book_id), None)
             if user and book:
                 if user.borrow_book(book):
+                    today = date.today()
+                    return_date = (today + timedelta(days=14)).strftime('%d-%m-%Y')
+                    loan = Loan(
+                        user_id=user.user_id,
+                        book=book.title,
+                        reservation_date=today.strftime('%d-%m-%Y'),
+                        return_date=return_date,
+                        actual_return_date=""  # jeszcze nie zwrócono
+                    )
+                    library.add_loan(loan)
                     print('Wypożyczono książkę!')
                 else:
                     print('Brak dostępnych egzemplarzy')
             else:
                 print('Nie znaleziono książki lub użytkownika!')
 
-        elif choice == '5':
+
+        elif choice == '8':
             user_id = int(input('ID użytkownika: '))
             book_id = int(input("ID książki: "))
             user = next((u for u in library.users if u.user_id == user_id), None)
@@ -444,7 +452,7 @@ def main():
             else:
                 print('Nie znaleziono książki lub użytkownika!')
 
-        elif choice == '6':
+        elif choice == '9':
             user_id = int(input('ID użytkownika: '))
             book_id = int(input("ID książki: "))
             user = next((u for u in library.users if u.user_id == user_id), None)
@@ -460,7 +468,7 @@ def main():
             else:
                 print('Nie znaleziono książki lub użytkownika!')
 
-        elif choice == '7':
+        elif choice == '10':
             user_id = int(input('ID użytkownika: '))
             book_id = int(input("ID książki: "))
             reservation_to_remove = None
@@ -474,11 +482,42 @@ def main():
             else:
                 print('Nie znaleziono rezerwacji!')
 
-        elif choice == '8':
+        elif choice == '11':
+            user_id = int(input('ID użytkownika: '))
+            book_title = input("Tytuł książki: ")
+            found = False
+            for loan in library.borrows_list:
+                if loan.user_id == user_id and loan.book_title == book_title:
+                    if loan.is_overdue():
+                        roznica = (datetime.today() - loan.return_date).days
+                        print(f'Wypożyczenie jest po terminie o {roznica} dni!')
+                        found = True
+                        break
+                    else:
+                        print('Wypożyczenie jest w terminie!')
+                        break
+            if not found:
+                print('Nie znaleziono wypożyczenia!')
+
+        elif choice == '12':
+            user_id = int(input('ID użytkownika: '))
+            book_title = input('Tytuł książki: ')
+            found = False
+            for loan in library.borrows_list:
+                if loan.user_id == user_id and loan.book == book_title:
+                    cost = loan.overdue_cost()
+                    print(f'Opłata za przetrzymanie: {cost} zł')
+                    found = True
+                    break
+            if not found:
+                print('Nie znaleziono wypożyczenia!')
+
+
+        elif choice == 'S':
             FileManager.save_library(library)
             print('Dane zapisane do plików!')
 
-        elif choice == '0':
+        elif choice == 'X':
             print('Do zobaczenia!')
             break
 
