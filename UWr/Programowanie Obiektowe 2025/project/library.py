@@ -338,7 +338,12 @@ class FileManager:
 
 
 def main():
-    library = Library()
+    try:
+        library = FileManager.load_library()
+        print('Dane zostały pomyślnie wczytane z plików!')
+    except:
+        library = Library()
+        print('Nie znaleziono plików!')
 
     while True:
         print("\n===== MENU BIBLIOTEKI =====")
@@ -423,7 +428,7 @@ def main():
             book_id = int(input("ID książki: "))
             user = next((u for u in library.users if u.user_id == user_id), None)
             book = next((b for b in library.books if b.book_id == book_id), None)
-            if user and book:
+            if user and book and user.type == 'Reader':
                 if user.borrow_book(book):
                     today = date.today()
                     return_date = (today + timedelta(days=14)).strftime('%d-%m-%Y')
@@ -490,7 +495,7 @@ def main():
             book_title = input("Tytuł książki: ")
             found = False
             for loan in library.borrows_list:
-                if loan.user_id == user_id and loan.book_title == book_title:
+                if loan.user_id == user_id and loan.book == book_title:
                     if loan.is_overdue():
                         roznica = (datetime.today() - loan.return_date).days
                         print(f'Wypożyczenie jest po terminie o {roznica} dni!')
