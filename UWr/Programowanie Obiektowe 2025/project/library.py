@@ -86,6 +86,9 @@ class User:
             return True
         return False
 
+    def __str__(self) -> str:
+        return f'Użytkownik {self.name} o nr ID {self.user_id}.'
+
 class Reader(User):
     def __init__(self, name: str, user_id: int, borrowed_books: list = None, reservation_history: list = None):
         super().__init__(name=name, user_id=user_id, borrowed_books=borrowed_books)
