@@ -47,6 +47,14 @@ class Book:
     def return_copy(self) -> None:
         self.available_copies += 1
 
+    def __eq__(self, other):
+        if not isinstance(other, Book):
+            return NotImplemented
+        return self.book_id == other.book_id
+
+    def __hash__(self):
+        return hash(self.book_id)
+
     def __str__(self) -> str:
         return f'{self.title} autorstwa {self.author} - {self.available_copies}/{self.total_copies} dostępnych kopii.'
 
@@ -337,15 +345,17 @@ class FileManager:
         return library
 
 
-def main():
-    try:
-        library = FileManager.load_library()
-        print('Dane zostały pomyślnie wczytane z plików!')
-    except:
-        library = Library()
-        print('Nie znaleziono plików!')
+class Console:
+    def __init__(self):
+        try:
+            self.library = FileManager.load_library()
+            print('Dane zostały pomyślnie wczytane z plików!')
+        except Exception as e:
+            print(f'Błąd podczas wczytywania danych: {e}')
+            self.library = Library()
+            print('Utworzono nową bibliotekę.')
 
-    while True:
+    def display_menu(self):
         print("\n===== MENU BIBLIOTEKI =====")
         print("1. Dodaj książkę")
         print("2. Usuń książkę")
@@ -362,73 +372,117 @@ def main():
         print("S. Zapisz dane do plików")
         print("X. Wyjście")
 
-        choice = input("Wybierz opcję: ")
+    def run(self):
+        while True:
+            self.display_menu()
+            choice = input("Wybierz opcję: ").upper()
 
-        if choice == '1':
+            if choice == '1':
+                self.add_book()
+            elif choice == '2':
+                self.remove_book()
+            elif choice == '3':
+                self.show_all_books()
+            elif choice == '4':
+                self.add_user()
+            elif choice == '5':
+                self.remove_user()
+            elif choice == '6':
+                self.show_all_users()
+            elif choice == '7':
+                self.borrow_book()
+            elif choice == '8':
+                self.return_book()
+            elif choice == '9':
+                self.reserve_book()
+            elif choice == '10':
+                self.cancel_reservation()
+            elif choice == '11':
+                self.check_overdue()
+            elif choice == '12':
+                self.check_fee()
+            elif choice == 'S':
+                self.save_data()
+            elif choice == 'X':
+                print('Do zobaczenia!')
+                break
+            else:
+                print('Nieznana opcja!')
+
+    def add_book(self):
+        try:
             title = input("Tytuł: ")
             author = input("Autor: ")
             total_copies = int(input("Liczba egzemplarzy: "))
             book_id = int(input("ID książki: "))
             book = Book(title, author, total_copies, book_id)
-            library.add_book(book)
+            self.library.add_book(book)
             print("Dodano książkę.")
+        except ValueError:
+            print("Błędne dane wejściowe!")
 
-        elif choice == '2':
+    def remove_book(self):
+        try:
             book_id = int(input("ID książki: "))
-            book_to_remove = None
-            for b in library.books:
-                if b.book_id == book_id:
-                    book_to_remove = b
-                    break
-            if book_to_remove:
-                library.remove_book(book_to_remove)
+            book = self.library.get_book_by_id(book_id)
+            if book:
+                self.library.remove_book(book)
                 print("Usunięto książkę!")
             else:
                 print("Nie znaleziono książki!")
+        except ValueError:
+            print("Nieprawidłowe ID książki!")
 
-        elif choice == '3':
-            if not library.books:
-                print('Brak książek!')
-            for book in library.books:
-                print(book)
+    def show_all_books(self):
+        if not self.library.books:
+            print('Brak książek!')
+        for book in self.library.books:
+            print(book)
 
-        elif choice == '4':
+    def add_user(self):
+        try:
             name = input('Imię użytkownika: ')
             user_id = int(input('ID użytkownika: '))
             user_type = input('Typ użytkownika (reader/librarian): ').lower()
             if user_type == 'reader':
                 user = Reader(name, user_id)
-            else:
+            elif user_type == 'librarian':
                 user = Librarian(name, user_id)
-            library.users.append(user)
+            else:
+                print("Nieprawidłowy typ użytkownika!")
+                return
+            self.library.add_user(user)
             print('Dodano użytkownika!')
+        except ValueError:
+            print("Nieprawidłowe dane wejściowe!")
 
-        elif choice == '5':
+    def remove_user(self):
+        try:
             user_id = int(input("Podaj ID użytkownika: "))
-            user_to_remove = None
-            for u in library.users:
-                if u.user_id == user_id:
-                    user_to_remove = u
-                    break
-            if user_to_remove:
-                library.remove_user(user_to_remove)
+            user = self.library.get_user_by_id(user_id)
+            if user:
+                self.library.remove_user(user)
                 print("Usunięto użytkownika!")
             else:
                 print("Nie znaleziono użytkownika")
+        except ValueError:
+            print("Nieprawidłowe ID użytkownika!")
 
-        elif choice == '6':
-            if not library.users:
-                print("Brak użytkowników!")
-            else:
-                for user in library.users:
-                    print(user)
+    def show_all_users(self):
+        if not self.library.users:
+            print("Brak użytkowników!")
+        else:
+            for user in self.library.users:
+                print(user)
 
-        elif choice == '7':
+    def borrow_book(self):
+        try:
             user_id = int(input('ID użytkownika: '))
             book_id = int(input("ID książki: "))
-            user = next((u for u in library.users if u.user_id == user_id), None)
-            book = next((b for b in library.books if b.book_id == book_id), None)
-            if user and book and user.type == 'Reader':
+            user = self.library.get_user_by_id(user_id)
+            book = self.library.get_book_by_id(book_id)
+
+            if user and book and isinstance(user, Reader):
                 if user.borrow_book(book):
                     today = date.today()
                     return_date = (today + timedelta(days=14)).strftime('%d-%m-%Y')
@@ -437,99 +491,109 @@ def main():
                         book=book.title,
                         reservation_date=today.strftime('%d-%m-%Y'),
                         return_date=return_date,
-                        actual_return_date=""  # jeszcze nie zwrócono
+                        actual_return_date=""
                     )
-                    library.add_loan(loan)
+                    self.library.add_loan(loan)
                     print('Wypożyczono książkę!')
                 else:
                     print('Brak dostępnych egzemplarzy')
             else:
-                print('Nie znaleziono książki lub użytkownika!')
+                print('Nie znaleziono książki lub użytkownika, lub użytkownik nie jest czytelnikiem!')
+        except ValueError:
+            print("Nieprawidłowe dane wejściowe!")
 
-
-        elif choice == '8':
+    def return_book(self):
+        try:
             user_id = int(input('ID użytkownika: '))
             book_id = int(input("ID książki: "))
-            user = next((u for u in library.users if u.user_id == user_id), None)
-            book = next((b for b in library.books if b.book_id == book_id), None)
+            user = self.library.get_user_by_id(user_id)
+            book = self.library.get_book_by_id(book_id)
             if user and book:
                 if user.return_book(book):
+                    for loan in self.library.borrows_list:
+                        if loan.user_id == user.user_id and loan.book == book.title and not loan.actual_return_date:
+                            loan.actual_return_date = date.today().strftime('%d-%m-%Y')
+                            break
                     print('Zwrot przyjęty!')
                 else:
                     print('Podany użytkownik nie ma tej książki!')
             else:
                 print('Nie znaleziono książki lub użytkownika!')
+        except ValueError:
+            print("Nieprawidłowe dane wejściowe!")
 
-        elif choice == '9':
+    def reserve_book(self):
+        try:
             user_id = int(input('ID użytkownika: '))
             book_id = int(input("ID książki: "))
-            user = next((u for u in library.users if u.user_id == user_id), None)
-            book = next((b for b in library.books if b.book_id == book_id), None)
-            if user and book:
+            user = self.library.get_user_by_id(user_id)
+            book = self.library.get_book_by_id(book_id)
+            if user and book and isinstance(user, Reader):
                 if user.reserve_book(book):
-                    r_dt = (datetime.today() + timedelta(days=7)).strftime('%d-%m-%Y')
+                    r_dt = (date.today() + timedelta(days=7)).strftime('%d-%m-%Y')
                     reservation = Reservation(book, user, return_date=r_dt)
-                    library.add_reservation(reservation)
+                    self.library.add_reservation(reservation)
                     print('Zarezerwowano książkę!')
                 else:
                     print('Nie można zarezerwować!')
             else:
-                print('Nie znaleziono książki lub użytkownika!')
+                print('Nie znaleziono książki lub użytkownika, lub użytkownik nie jest czytelnikiem!')
+        except ValueError:
+            print("Nieprawidłowe dane wejściowe!")
 
-        elif choice == '10':
+    def cancel_reservation(self):
+        try:
             user_id = int(input('ID użytkownika: '))
             book_id = int(input("ID książki: "))
-            reservation_to_remove = None
-            for res in library.reservations:
+            for res in self.library.reservations:
                 if res.user.user_id == user_id and res.book.book_id == book_id and res.active:
-                    reservation_to_remove = res
-                    break
-            if reservation_to_remove:
-                library.remove_reservation(reservation_to_remove)
-                print('Rezerwacja usunięta!')
-            else:
-                print('Nie znaleziono rezerwacji!')
+                    self.library.remove_reservation(res)
+                    print('Rezerwacja usunięta!')
+                    return
+            print('Nie znaleziono aktywnej rezerwacji!')
+        except ValueError:
+            print("Nieprawidłowe dane wejściowe!")
 
-        elif choice == '11':
+    def check_overdue(self):
+        try:
             user_id = int(input('ID użytkownika: '))
             book_title = input("Tytuł książki: ")
-            found = False
-            for loan in library.borrows_list:
-                if loan.user_id == user_id and loan.book == book_title:
-                    if loan.is_overdue():
-                        roznica = (datetime.today() - loan.return_date).days
+            for loan in self.library.borrows_list:
+                if loan.user_id == user_id and loan.book == book_title and not loan.actual_return_date:
+                    return_date = datetime.strptime(loan.return_date, '%d-%m-%Y').date()
+                    if date.today() > return_date:
+                        roznica = (date.today() - return_date).days
                         print(f'Wypożyczenie jest po terminie o {roznica} dni!')
-                        found = True
-                        break
                     else:
                         print('Wypożyczenie jest w terminie!')
-                        break
-            if not found:
-                print('Nie znaleziono wypożyczenia!')
+                    return
+            print('Nie znaleziono aktywnego wypożyczenia!')
+        except ValueError:
+            print("Nieprawidłowe dane wejściowe!")
 
-        elif choice == '12':
+    def check_fee(self):
+        try:
             user_id = int(input('ID użytkownika: '))
             book_title = input('Tytuł książki: ')
-            found = False
-            for loan in library.borrows_list:
-                if loan.user_id == user_id and loan.book == book_title:
+            for loan in self.library.borrows_list:
+                if loan.user_id == user_id and loan.book == book_title and not loan.actual_return_date:
                     cost = loan.overdue_cost()
                     print(f'Opłata za przetrzymanie: {cost} zł')
-                    found = True
-                    break
-            if not found:
-                print('Nie znaleziono wypożyczenia!')
+                    return
+            print('Nie znaleziono aktywnego wypożyczenia!')
+        except ValueError:
+            print("Nieprawidłowe dane wejściowe!")
 
-
-        elif choice == 'S':
-            FileManager.save_library(library)
+    def save_data(self):
+        try:
+            FileManager.save_library(self.library)
             print('Dane zapisane do plików!')
+        except Exception as e:
+            print(f'Błąd podczas zapisywania: {e}')
 
-        elif choice == 'X':
-            print('Do zobaczenia!')
-            break
 
-        else:
-            print('Nieznana opcja!')
+def main():
+    console = Console()
+    console.run()
 
 main()
