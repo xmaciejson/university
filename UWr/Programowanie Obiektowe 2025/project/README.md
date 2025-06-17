@@ -63,3 +63,9 @@ Reprezentuje książkę w bibliotece.
   -  Obsługuje zapis i odczyt danych biblioteki do/z pliku JSON.
     
    - Serializuje i deserializuje obiekty Library, Book, User itd.
+
+🎮 Console
+ -  Obsługuje interfejs użytkownika i wywołuje wszystkie możliwe funkcje.
+    
+   - Aktualizuje na bieżąco stany, użytkowników itp.
+     
