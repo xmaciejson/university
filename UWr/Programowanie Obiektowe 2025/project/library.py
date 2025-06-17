@@ -249,20 +249,39 @@ class Library:
         self.reservations = []
 
     def add_user(self, user: User) -> None:
-        if user not in self.users:
-            self.users.append(user)
+        # Sprawdź czy użytkownik o tym ID już istnieje
+        if self.get_user_by_id(user.user_id) is not None:
+            raise ValueError(f"Użytkownik o ID {user.user_id} już istnieje!")
+        self.users.append(user)
+
+    def user_exists(self, name: str) -> bool:
+        return any(user.name.lower() == name.lower() for user in self.users)
 
     def remove_user(self, user: User) -> None:
         if user in self.users:
             self.users.remove(user)
 
     def add_book(self, book: Book) -> None:
-        if book not in self.books:
-            self.books.append(book)
+        # Sprawdź czy książka o tym ID już istnieje
+        existing_by_id = self.get_book_by_id(book.book_id)
+        if existing_by_id is not None:
+            raise ValueError(f"Książka o ID {book.book_id} już istnieje w bibliotece!")
+
+        # Sprawdź czy książka o tym tytule i autorze już istnieje
+        if self.book_exists(book.title, book.author):
+            raise ValueError(
+                f"Książka '{book.title}' autorstwa {book.author} już istnieje! Zamiast dodawać nową, zaktualizuj liczbę egzemplarzy.")
+
+        self.books.append(book)
 
     def remove_book(self, book: Book) -> None:
         if book in self.books:
             self.books.remove(book)
+
+    def book_exists(self, title: str, author: str) -> bool:
+        return any(book.title.lower() == title.lower() and
+                   book.author.lower() == author.lower()
+                   for book in self.books)
 
     def add_loan(self, loan: Loan) -> None:
         if loan not in self.borrows_list:
@@ -411,15 +430,16 @@ class Console:
 
     def add_book(self):
         try:
-            title = input("Tytuł: ")
-            author = input("Autor: ")
+            title = input("Tytuł: ").strip()
+            author = input("Autor: ").strip()
             total_copies = int(input("Liczba egzemplarzy: "))
             book_id = int(input("ID książki: "))
+
             book = Book(title, author, total_copies, book_id)
             self.library.add_book(book)
             print("Dodano książkę.")
-        except ValueError:
-            print("Błędne dane wejściowe!")
+        except ValueError as e:
+            print(f"Błąd: {e}")
 
     def remove_book(self):
         try:
