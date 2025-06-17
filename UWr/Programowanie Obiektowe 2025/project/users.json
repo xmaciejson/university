@@ -1,0 +1,1 @@
+[{"type": "Reader", "name": "Maciek", "user_id": 1, "borrowed_books": [1, 1], "reservation_history": []}, {"type": "Reader", "name": "Kuba", "user_id": 2, "borrowed_books": [], "reservation_history": [2]}]

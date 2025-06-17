@@ -35,7 +35,10 @@ class Book:
         return book
 
     def is_available(self) -> bool:
-        return self.available_copies > 0
+        return (self.available_copies - self.reserved) > 0
+
+    def can_be_reserved(self) -> bool:
+        return self.available_copies > self.reserved
 
     def borrow_copy(self) -> bool:
 
@@ -56,7 +59,7 @@ class Book:
         return hash(self.book_id)
 
     def __str__(self) -> str:
-        return f'{self.title} autorstwa {self.author} - {self.available_copies}/{self.total_copies} dostępnych kopii.'
+        return f'{self.title} autorstwa {self.author} i nr ID {self.book_id} - {self.available_copies}/{self.total_copies} dostępnych kopii. '
 
 class User:
 
@@ -82,9 +85,10 @@ class User:
         return user
 
     def borrow_book(self, book) -> bool:
-        if book.borrow_copy():
-            self.borrowed_books.append(book)
-            return True
+        if book.is_available():
+            if book.borrow_copy():
+                self.borrowed_books.append(book)
+                return True
         return False
 
     def return_book(self, book) -> bool:
@@ -119,7 +123,7 @@ class Reader(User):
         return reader
 
     def reserve_book(self, book) -> bool:
-        if book.reserved < book.available_copies:
+        if book.can_be_reserved():  #
             book.reserved += 1
             self.reservation_history.append(book)
             return True
@@ -156,9 +160,9 @@ class Librarian(User):
         library.add_user(user)
 
 class Loan:
-    def __init__(self, user_id: int, book: str, reservation_date: str, return_date: str, actual_return_date: str):
+    def __init__(self, user_id: int, book_id: int, reservation_date: str, return_date: str, actual_return_date: str):
         self.user_id = user_id
-        self.book = book
+        self.book_id = book_id
         self.reservation_date = reservation_date
         self.return_date = return_date
         self.actual_return_date = actual_return_date
@@ -166,21 +170,21 @@ class Loan:
     def to_dict(self):
         return {
             'user_id': self.user_id,
-            'book': self.book,
+            'book_id': self.book_id,
             'reservation_date': self.reservation_date,
             'return_date': self.return_date,
             'actual_return_date': self.actual_return_date
         }
+
     @staticmethod
     def from_dict(data: dict):
-        loan = Loan(
+        return Loan(
             user_id=data['user_id'],
-            book=data['book'],
+            book_id=data['book_id'],
             reservation_date=data['reservation_date'],
             return_date=data['return_date'],
             actual_return_date=data['actual_return_date']
         )
-        return loan
 
     def is_overdue(self) -> bool:
         current_date = date.today()
@@ -231,14 +235,12 @@ class Reservation:
 
     def cancel_reservation(self) -> bool:
         if self.active:
-            if self.book.reserved > 0:
-                self.book.reserved -= 1
-
-            if self.book in self.user.borrowed_books:
-                self.user.borrowed_books.remove(self.book)
-
+            self.book.reserved -= 1
+            if self.book in self.user.reservation_history:
+                self.user.reservation_history.remove(self.book)
             self.active = False
             return True
+        return False
 
 
 class Library:
@@ -249,7 +251,6 @@ class Library:
         self.reservations = []
 
     def add_user(self, user: User) -> None:
-        # Sprawdź czy użytkownik o tym ID już istnieje
         if self.get_user_by_id(user.user_id) is not None:
             raise ValueError(f"Użytkownik o ID {user.user_id} już istnieje!")
         self.users.append(user)
@@ -262,12 +263,10 @@ class Library:
             self.users.remove(user)
 
     def add_book(self, book: Book) -> None:
-        # Sprawdź czy książka o tym ID już istnieje
         existing_by_id = self.get_book_by_id(book.book_id)
         if existing_by_id is not None:
             raise ValueError(f"Książka o ID {book.book_id} już istnieje w bibliotece!")
 
-        # Sprawdź czy książka o tym tytule i autorze już istnieje
         if self.book_exists(book.title, book.author):
             raise ValueError(
                 f"Książka '{book.title}' autorstwa {book.author} już istnieje! Zamiast dodawać nową, zaktualizuj liczbę egzemplarzy.")
@@ -284,16 +283,28 @@ class Library:
                    for book in self.books)
 
     def add_loan(self, loan: Loan) -> None:
-        if loan not in self.borrows_list:
-            self.borrows_list.append(loan)
+        active_loans = [l for l in self.borrows_list
+                        if l.user_id == loan.user_id
+                        and l.book_id == loan.book_id
+                        and not l.actual_return_date]
+
+        if active_loans:
+            raise ValueError("Użytkownik już ma aktywną pożyczkę tej książki!")
+        self.borrows_list.append(loan)
 
     def remove_loan(self, loan: Loan) -> None:
         if loan in self.borrows_list:
             self.borrows_list.remove(loan)
 
-    def add_reservation(self, reservation: Reservation):
-        if reservation not in self.reservations:
-            self.reservations.append(reservation)
+    def add_reservation(self, reservation: Reservation) -> None:
+        active_reservations = [r for r in self.reservations
+                               if r.user.user_id == reservation.user.user_id
+                               and r.book.book_id == reservation.book.book_id
+                               and r.active]
+
+        if active_reservations:
+            raise ValueError("Użytkownik już ma aktywną rezerwację tej książki!")
+        self.reservations.append(reservation)
 
     def remove_reservation(self, reservation: Reservation):
         if reservation in self.reservations:
@@ -323,14 +334,18 @@ class FileManager:
             json.dump([loan.to_dict() for loan in library.borrows_list], file)
 
     @staticmethod
+    @staticmethod
     def load_library():
         library = Library()
+
+        # Ładowanie książek
         if os.path.exists('books.json'):
             with open('books.json', 'r', encoding='utf-8') as file:
                 for data in json.load(file):
                     book = Book.from_dict(data)
                     library.add_book(book)
 
+        # Ładowanie użytkowników
         if os.path.exists('users.json'):
             with open('users.json', 'r', encoding='utf-8') as file:
                 for data in json.load(file):
@@ -343,6 +358,7 @@ class FileManager:
                         continue
                     library.add_user(user)
 
+        # Ładowanie rezerwacji
         if os.path.exists('reservations.json'):
             with open('reservations.json', 'r', encoding='utf-8') as file:
                 for data in json.load(file):
@@ -352,17 +368,19 @@ class FileManager:
                         reservation = Reservation(book, user, data['return_date'])
                         library.add_reservation(reservation)
 
+        # Ładowanie wypożyczeń
         if os.path.exists('loans.json'):
             with open('loans.json', 'r', encoding='utf-8') as file:
                 for data in json.load(file):
-                    book = library.get_book_by_id(data['book_id'])
+                    book = library.get_book_by_id(data['book_id'])  # Zmiana tutaj
                     user = library.get_user_by_id(data['user_id'])
-                    if book and isinstance(user, Reader):
-                        user.borrowed_books.append(book)
-                        library.borrows_list.append(Loan(book, user, data['return_date']))
+                    if book and user:
+                        loan = Loan.from_dict(data)
+                        library.add_loan(loan)
+                        if isinstance(user, Reader):
+                            user.borrowed_books.append(book)
 
         return library
-
 
 class Console:
     def __init__(self):
@@ -461,8 +479,17 @@ class Console:
 
     def add_user(self):
         try:
-            name = input('Imię użytkownika: ')
+            name = input('Imię użytkownika: ').strip()
             user_id = int(input('ID użytkownika: '))
+
+            if self.library.get_user_by_id(user_id) is not None:
+                print(f"Błąd: Użytkownik o ID {user_id} już istnieje!")
+                return
+
+            if self.library.user_exists(name):
+                print(f"Błąd: Użytkownik o nazwie '{name}' już istnieje!")
+                return
+
             user_type = input('Typ użytkownika (reader/librarian): ').lower()
             if user_type == 'reader':
                 user = Reader(name, user_id)
@@ -471,10 +498,11 @@ class Console:
             else:
                 print("Nieprawidłowy typ użytkownika!")
                 return
+
             self.library.add_user(user)
             print('Dodano użytkownika!')
-        except ValueError:
-            print("Nieprawidłowe dane wejściowe!")
+        except ValueError as e:
+            print(f"Błąd: {e}")
 
     def remove_user(self):
         try:
@@ -508,7 +536,7 @@ class Console:
                     return_date = (today + timedelta(days=14)).strftime('%d-%m-%Y')
                     loan = Loan(
                         user_id=user.user_id,
-                        book=book.title,
+                        book_id=book.book_id,  # Zmiana tutaj
                         reservation_date=today.strftime('%d-%m-%Y'),
                         return_date=return_date,
                         actual_return_date=""
@@ -528,10 +556,13 @@ class Console:
             book_id = int(input("ID książki: "))
             user = self.library.get_user_by_id(user_id)
             book = self.library.get_book_by_id(book_id)
+
             if user and book:
                 if user.return_book(book):
                     for loan in self.library.borrows_list:
-                        if loan.user_id == user.user_id and loan.book == book.title and not loan.actual_return_date:
+                        if (loan.user_id == user.user_id and
+                                loan.book_id == book.book_id and
+                                not loan.actual_return_date):
                             loan.actual_return_date = date.today().strftime('%d-%m-%Y')
                             break
                     print('Zwrot przyjęty!')
@@ -548,16 +579,31 @@ class Console:
             book_id = int(input("ID książki: "))
             user = self.library.get_user_by_id(user_id)
             book = self.library.get_book_by_id(book_id)
-            if user and book and isinstance(user, Reader):
+
+            if not user or not book:
+                print("Nie znaleziono książki lub użytkownika!")
+                return
+
+            if not isinstance(user, Reader):
+                print("Tylko czytelnicy mogą rezerwować książki!")
+                return
+
+            if not book.can_be_reserved():
+                print("Nie można zarezerwować - brak wolnych egzemplarzy!")
+                return
+
+            r_dt = (date.today() + timedelta(days=7)).strftime('%d-%m-%Y')
+            reservation = Reservation(book, user, return_date=r_dt)
+
+            try:
+                self.library.add_reservation(reservation)
                 if user.reserve_book(book):
-                    r_dt = (date.today() + timedelta(days=7)).strftime('%d-%m-%Y')
-                    reservation = Reservation(book, user, return_date=r_dt)
-                    self.library.add_reservation(reservation)
                     print('Zarezerwowano książkę!')
                 else:
-                    print('Nie można zarezerwować!')
-            else:
-                print('Nie znaleziono książki lub użytkownika, lub użytkownik nie jest czytelnikiem!')
+                    self.library.remove_reservation(reservation)
+                    print('Nie udało się zarezerwować książki!')
+            except ValueError as e:
+                print(f"Błąd: {e}")
         except ValueError:
             print("Nieprawidłowe dane wejściowe!")
 
@@ -577,9 +623,9 @@ class Console:
     def check_overdue(self):
         try:
             user_id = int(input('ID użytkownika: '))
-            book_title = input("Tytuł książki: ")
+            book_id = int(input("ID książki: "))
             for loan in self.library.borrows_list:
-                if loan.user_id == user_id and loan.book == book_title and not loan.actual_return_date:
+                if loan.user_id == user_id and loan.book_id == book_id and not loan.actual_return_date:
                     return_date = datetime.strptime(loan.return_date, '%d-%m-%Y').date()
                     if date.today() > return_date:
                         roznica = (date.today() - return_date).days
@@ -594,9 +640,9 @@ class Console:
     def check_fee(self):
         try:
             user_id = int(input('ID użytkownika: '))
-            book_title = input('Tytuł książki: ')
+            book_id = int(input("ID książki: "))
             for loan in self.library.borrows_list:
-                if loan.user_id == user_id and loan.book == book_title and not loan.actual_return_date:
+                if loan.user_id == user_id and loan.book_id == book_id and not loan.actual_return_date:
                     cost = loan.overdue_cost()
                     print(f'Opłata za przetrzymanie: {cost} zł')
                     return
